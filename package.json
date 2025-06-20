@@ -1,0 +1,36 @@
+{
+  "name": "@bredele/verify-email",
+  "version": "1.0.0",
+  "description": "Check if an email address truly exists using SMTP based verification.",
+  "main": "dist/cjs/index.js",
+  "exports": {
+    "import": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/esm/src/index.js"
+    },
+    "require": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/cjs/src/index.js"
+    }
+  },
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build:cjs": "swc src -d dist/cjs --config-file .swc/cjs.json --copy-files",
+    "build:esm": "swc src -d dist/esm --config-file .swc/esm.json --copy-files",
+    "build": "npm run build:cjs && npm run build:esm && tsc --emitDeclarationOnly --outDir dist",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test dist/cjs/src/index.test.js"
+  },
+  "keywords": [
+    "email",
+    "pattern"
+  ],
+  "author": "Olivier Wietrich",
+  "license": "MIT",
+  "devDependencies": {
+    "@swc/cli": "^0.7.7",
+    "@swc/core": "^1.12.3",
+    "@types/node": "^24.0.3",
+    "typescript": "^5.8.3"
+  }
+}
