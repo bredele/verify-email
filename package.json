@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Check if an email address truly exists using SMTP based verification.",
   "main": "dist/cjs/index.js",
+  "files": [
+    "dist"
+  ],
   "exports": {
     "import": {
       "types": "./dist/index.d.ts",
@@ -36,5 +39,8 @@
     "@swc/core": "^1.12.3",
     "@types/node": "^24.0.3",
     "typescript": "^5.8.3"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
