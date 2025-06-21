@@ -1,28 +1,43 @@
 {
   "name": "@bredele/verify-email",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Check if an email address truly exists using SMTP based verification.",
-  "main": "dist/cjs/src/index.js",
+  "main": "./dist/cjs/index.js",
   "files": [
     "dist"
   ],
   "exports": {
-    "import": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/esm/src/index.js"
+    "./dns": {
+      "import": "./dist/esm/dns.js",
+      "require": "./dist/cjs/dns.js",
+      "types": "./dist/types/dns.d.ts"
     },
-    "require": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/cjs/src/index.js"
+    "./errors": {
+      "import": "./dist/esm/errors.js",
+      "require": "./dist/cjs/errors.js",
+      "types": "./dist/types/errors.d.ts"
+    },
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/types/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/esm/types.js",
+      "require": "./dist/cjs/types.js",
+      "types": "./dist/types/types.d.ts"
+    },
+    "./validation": {
+      "import": "./dist/esm/validation.js",
+      "require": "./dist/cjs/validation.js",
+      "types": "./dist/types/validation.d.ts"
     }
   },
-  "types": "dist/index.d.ts",
+  "types": "./dist/types/index.d.ts",
   "scripts": {
-    "build:cjs": "swc src -d dist/cjs --config-file .swc/cjs.json --copy-files",
-    "build:esm": "swc src -d dist/esm --config-file .swc/esm.json --copy-files",
-    "build": "npm run build:cjs && npm run build:esm && tsc --emitDeclarationOnly --outDir dist",
+    "build": "cmplr",
     "typecheck": "tsc --noEmit",
-    "test": "npm run build && node --test dist/cjs/src/index.test.js"
+    "test": "npm run build && node --test dist/cjs/index.test.js"
   },
   "keywords": [
     "email",
@@ -35,12 +50,12 @@
     "@bredele/smtp-verify-email": "^1.0.0"
   },
   "devDependencies": {
-    "@swc/cli": "^0.7.7",
-    "@swc/core": "^1.12.3",
     "@types/node": "^24.0.3",
+    "cmplr": "^1.0.0",
     "typescript": "^5.8.3"
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "module": "./dist/esm/index.js"
 }
