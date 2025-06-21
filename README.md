@@ -5,7 +5,6 @@ Check if an email address truly exists using SMTP based verification:
 - DNS MX lookup with 5s timeout + A record fallback
 - SMP connection test with proper HELO/MAIL/RCPT sequence
 - Proper SMTP etiquette (QUIT command, connection cleanup)
-- 30s SMTP timeout prevents hanging
 - Catch-all detection
 - Confidence scoring based on server response
 
@@ -25,6 +24,10 @@ import verify from "@bredele/verify-email";
 await verify("test@gmail.com");
 // => { valid: true, confidence: 'high' }
 ```
+
+# Notes
+
+Most residential internet providers block outbound connections to port 25 and there's no reliable ay to bypass it. This results in SMTP verification timeouts which lower the confidence score (you might be a medium confidence for emails that truly exists).
 
 ## Confidence Scoring
 

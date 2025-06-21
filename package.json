@@ -27,6 +27,10 @@
   ],
   "author": "Olivier Wietrich",
   "license": "MIT",
+  "dependencies": {
+    "@bredele/get-mail-server": "^1.0.0",
+    "@bredele/smtp-verify-email": "^1.0.0"
+  },
   "devDependencies": {
     "@swc/cli": "^0.7.7",
     "@swc/core": "^1.12.3",
