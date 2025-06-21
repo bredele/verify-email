@@ -12,7 +12,7 @@ This module handles greylisting (4xx responses), catch-all domains, connection f
 
 ## Installation
 
-```sh
+```
 $ npm install @bredele/verify-email
 ```
 
