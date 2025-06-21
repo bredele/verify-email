@@ -1,20 +1,32 @@
-import { VerifyResult } from "./types";
+import { randomUUID } from "crypto";
+import { VerifyResult, VerifyOptions } from "./types";
 import { DNSError, EmailVerificationError } from "./errors";
-import { DEBUG_MODE } from "./constants";
 import { hasARecord } from "./dns";
 import { extractDomain } from "./validation";
 import getMailServer from "@bredele/get-mail-server";
 import smtpVerify from "@bredele/smtp-verify-email";
 
-const verify = async (email: string): Promise<VerifyResult> => {
+/**
+ * Verifies if an email address truly exists using SMTP-based verification
+ * @param email - The email address to verify
+ * @param options - Configuration options including debug mode
+ * @returns Promise resolving to verification result with confidence score
+ */
+
+const verify = async (
+  email: string,
+  options: VerifyOptions = {}
+): Promise<VerifyResult> => {
+  const debugMode = options.debug ?? false;
   const domain = extractDomain(email);
   if (!domain) {
     throw new EmailVerificationError("Invalid email format", "INVALID_EMAIL");
   }
   try {
     const mxRecord = await getMailServer(domain);
+    // Test if the specific email is accepted by SMTP server
     const isAccepted = await smtpVerify(mxRecord, email);
-    // Test for catch-all by trying a fake email
+    // Test for catch-all behavior by trying a fake email
     const isCatchAll = isAccepted
       ? await testCatchAll(mxRecord, domain)
       : false;
@@ -30,7 +42,7 @@ const verify = async (email: string): Promise<VerifyResult> => {
         confidence,
         reason,
         isCatchAll,
-        debug: DEBUG_MODE ? { mxRecord } : undefined,
+        debug: debugMode ? { mxRecord } : undefined,
       };
     } else {
       return {
@@ -38,19 +50,18 @@ const verify = async (email: string): Promise<VerifyResult> => {
         confidence: "invalid",
         reason: "Email rejected by mail server",
         isCatchAll: false,
-        debug: DEBUG_MODE ? { mxRecord } : undefined,
+        debug: debugMode ? { mxRecord } : undefined,
       };
     }
   } catch (error) {
-    const errorType = classifyError(error);
-
-    switch (errorType) {
+    switch (classifyError(error)) {
       case "timeout":
-        return createTimeoutResult();
+        return createTimeoutResult(debugMode);
       case "dns_not_found":
+        // No MX record found - check if domain has A record as fallback
         const hasA = await hasARecord(domain);
         if (hasA) {
-          return createDNSFallbackResult();
+          return createDNSFallbackResult(debugMode);
         }
         throw new DNSError("No MX or A records found for domain", domain);
       default:
@@ -59,7 +70,11 @@ const verify = async (email: string): Promise<VerifyResult> => {
   }
 };
 
-// Error classification for better catch block handling
+/**
+ * Classifies errors to determine appropriate handling strategy
+ * Different error types require different confidence levels and responses
+ */
+
 type ErrorType = "timeout" | "dns_not_found" | "other";
 
 const classifyError = (error: any): ErrorType => {
@@ -73,29 +88,43 @@ const classifyError = (error: any): ErrorType => {
   return "other";
 };
 
-// Result builders for consistent response formatting
-const createTimeoutResult = (): VerifyResult => ({
+/**
+ * Creates result for SMTP timeout scenarios
+ * Timeouts often indicate valid domains with restrictive servers
+ */
+
+const createTimeoutResult = (debugMode: boolean): VerifyResult => ({
   valid: true,
   confidence: "medium",
   reason: "SMTP server timeout (domain likely valid)",
   isCatchAll: false,
-  debug: DEBUG_MODE ? { mxRecord: "timeout" } : undefined,
+  debug: debugMode ? { mxRecord: "timeout" } : undefined,
 });
 
-const createDNSFallbackResult = (): VerifyResult => ({
+/**
+ * Creates result for domains with A records but no MX records
+ * These domains exist but may not have proper email setup
+ */
+
+const createDNSFallbackResult = (debugMode: boolean): VerifyResult => ({
   valid: true,
   confidence: "low",
   reason: "No MX record, domain exists",
   isCatchAll: false,
-  debug: DEBUG_MODE ? { mxRecord: "none" } : undefined,
+  debug: debugMode ? { mxRecord: "none" } : undefined,
 });
 
-// Simple catch-all test using the external package
+/**
+ * Tests if a domain accepts all emails (catch-all behavior)
+ * Uses a fake email address to see if the server accepts it
+ */
+
 const testCatchAll = async (
   mxRecord: string,
   domain: string
 ): Promise<boolean> => {
-  const fakeEmail = `nonexistent${Date.now()}@${domain}`;
+  // Generate a fake email using UUID to ensure uniqueness and avoid collisions
+  const fakeEmail = `nonexistent-${randomUUID()}@${domain}`;
   try {
     return await smtpVerify(mxRecord, fakeEmail);
   } catch {
@@ -105,6 +134,6 @@ const testCatchAll = async (
 
 // Re-export types and errors
 export { EmailVerificationError, DNSError } from "./errors";
-export type { VerifyResult } from "./types";
+export type { VerifyResult, VerifyOptions } from "./types";
 
 export default verify;

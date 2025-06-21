@@ -7,3 +7,7 @@ export interface VerifyResult {
     mxRecord?: string;
   };
 }
+
+export interface VerifyOptions {
+  debug?: boolean;
+}
